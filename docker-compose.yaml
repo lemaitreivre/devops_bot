@@ -1,0 +1,76 @@
+version: '3'  # Версия синтаксиса Docker Compose
+
+services:
+  db:
+    image: db_image
+    container_name: db  # Имя контейнера для сервиса базы данных
+    build:  # Определение способа сборки образа базы данных
+      context: ./db  # Путь к директории с исходными файлами базы данных
+      dockerfile: Dockerfile  # Путь к Dockerfile для сборки образа
+      args:  # Аргументы сборки для передачи переменных в Dockerfile
+        DB_REPL_USER: ${DB_REPL_USER}
+        DB_REPL_PASSWORD: ${DB_REPL_PASSWORD}
+        DB_DATABASE: ${DB_DATABASE}
+        DB_PORT: ${DB_PORT}
+    restart: unless-stopped  # Поведение перезапуска контейнера
+    environment:  # Переменные окружения для контейнера PostgreSQL
+      POSTGRES_USER: ${DB_USER}  # Пользователь
+      POSTGRES_PASSWORD: ${DB_PASSWORD}  # Пароль
+      POSTGRES_DB: ${DB_DATABASE}  # Имя базы данных
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost all all 0.0.0.0/0 password\nhost replication ${DB_REPL_USER} 0.0.0.0/0 md5"
+    env_file:  # Файл .env для загрузки переменных окружения
+      - .env
+    volumes:
+      - pg_logs:/var/log/
+
+  db_repl:
+    image: db_repl_image
+    container_name: db_repl  # Имя контейнера для сервиса реплицирующей базы данных
+    build:  # Определение способа сборки образа реплицирующей базы данных
+      context: ./db_repl  # Путь к директории с исходными файлами реплицирующей базы данных
+      dockerfile: Dockerfile  # Путь к Dockerfile для сборки образа
+      args:  # Аргументы сборки для передачи переменных в Dockerfile
+        DB_REPL_HOST: ${DB_REPL_HOST}
+        DB_REPL_PORT: ${DB_REPL_PORT}
+        DB_REPL_USER: ${DB_REPL_USER}
+        DB_REPL_PASSWORD: ${DB_REPL_PASSWORD}
+        DB_PORT: ${DB_PORT}
+        DB_HOST: ${DB_HOST}
+    restart: unless-stopped  # Поведение перезапуска контейнера
+    environment:  # Переменные окружения для контейнера реплицирующей базы данных
+      POSTGRES_PASSWORD: ${DB_PASSWORD}  # Пароль
+      POSTGRES_USER: ${DB_USER}  # Пользователь
+      POSTGRES_REPLICATION_USER: ${DB_REPL_USER}  # Пароль пользователя базы данных
+      POSTGRES_REPLICATION_PASSWORD: ${DB_REPL_PASSWORD}
+    env_file:  # Файл .env для загрузки переменных окружения
+      - .env
+    depends_on:  # Зависимость от сервиса основной базы данных
+      - db
+
+  bot:
+    image: bot_image
+    container_name: bot  # Имя контейнера для сервиса бота
+    build:  # Определение способа сборки образа бота
+      context: ./bot  # Путь к директории с исходными файлами бота
+      dockerfile: Dockerfile  # Путь к Dockerfile для сборки образа
+    restart: unless-stopped  # Поведение перезапуска контейнера
+    environment:  # Переменные окружения для контейнера бота
+      TOKEN: ${TOKEN}  # Токен для работы бота
+      HOST: ${RM_HOST}  # Хост для подключения к базе данных
+      PORT: ${RM_PORT}  # Порт для подключения к базе данных
+      USER: ${RM_USER}  # Пользователь
+      PASSWORD: ${RM_PASSWORD}  # Пароль
+      DBHOST: db  # Хост базы данных (используем имя сервиса db)
+      DBPORT: ${DB_PORT}  # Порт базы данных
+      DBUSER: ${DB_USER}  # Пользователь базы данных
+      DBPASSWORD: ${DB_PASSWORD}  # Пароль пользователя базы данных
+      DBNAME: ${DB_DATABASE}  # Имя базы данных
+    env_file:  # Файл .env для загрузки переменных окружения
+      - .env
+    depends_on:  # Зависимость от сервиса основной базы данных
+      - db
+    volumes:
+      - pg_logs:/var/log/
+
+volumes:  # Определение тома Docker для базы данных
+  pg_logs:
