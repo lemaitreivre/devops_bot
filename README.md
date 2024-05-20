@@ -1,7 +1,10 @@
 # devops_bot
-devops bot for pt_start  \n
+devops bot for pt_start 
 
-specify .env by urself  \n
-to start:  \n
-docker-compose build  \n
+specify .env by urself
+
+to start:  
+
+docker-compose build  
+
 docker-compose run
