@@ -177,10 +177,10 @@ def verify_password(update: Update, context):
 
 
 def get_ssh_and_run_cmd(cmd):
-    host = os.getenv('HOST')
-    port = os.getenv('PORT')
-    username = os.getenv('USER')
-    password = os.getenv('PASSWORD')
+    host = os.getenv('RM_HOST')
+    port = os.getenv('RM_PORT')
+    username = os.getenv('RM_USER')
+    password = os.getenv('RM_PASSWORD')
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(hostname=host, username=username, password=password, port=port)
@@ -315,11 +315,11 @@ def connect_to_db():
 
     #connection = None
 
-    DBUSER = os.getenv('DBUSER')
-    DBPASSWORD = os.getenv('DBPASSWORD')
-    DBHOST = os.getenv('DBHOST')
-    DBPORT = os.getenv('DBPORT')
-    DBNAME = os.getenv('DBNAME')
+    DBUSER = os.getenv('DB_USER')
+    DBPASSWORD = os.getenv('DB_PASSWORD')
+    DBHOST = os.getenv('DB_HOST')
+    DBPORT = os.getenv('DB_PORT')
+    DBNAME = os.getenv('DB_DATABASE')
 
     try:
         connection = psycopg2.connect(user=DBUSER,
