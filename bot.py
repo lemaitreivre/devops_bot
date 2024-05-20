@@ -278,20 +278,15 @@ def get_services(update: Update,context):
 import subprocess
 
 def get_repl_logs(update: Update, context):
-    try:
-        command = "cat /var/log/postgresql/postgresql.log | grep repl | tail -n 35"
-        res = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if res.returncode != 0 or res.stderr.decode() != "":
-            update.message.reply_text("Can not open log file!")
-        else:
-            logs = res.stdout.decode().strip('\n')
-            # Ограничение по количеству символов
-            if len(logs) > 4096:
-                logs = logs[:4093] + "..."
-            update.message.reply_text(logs)
-    except Exception as e:
-        # Обработка исключений
-        update.message.reply_text(f"Error: {str(e)}")
+    update.message.reply_text("Ищу логи о репликации...")
+    
+    repl_logs_info = get_ssh_and_run_cmd("sudo cat /var/log/postgresql/postgresql-14-main.log | grep repl")
+    
+    # Отправляем найденные логи в сообщении
+    if len(repl_logs_info) > 4096:
+        update.message.reply_text(repl_logs_info[:4096])
+    else:
+        update.message.reply_text(repl_logs_info)    
 
 
 def get_apt_list_command(update: Update,context):
